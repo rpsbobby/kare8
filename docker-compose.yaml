@@ -9,17 +9,37 @@ services:
 
   kafka:
     image: bitnami/kafka:3.6
+    ports:
+      - "9092:9092"       # internal Docker network
+      - "29092:29092"     # for external tools like PyCharm
     environment:
       - KAFKA_ENABLE_KRAFT=no
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       - KAFKA_CFG_BROKER_ID=1
       - ALLOW_PLAINTEXT_LISTENER=yes
-    ports:
-      - "9092:9092"
     depends_on:
       - zookeeper
+
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  kafka-consumer:
+    build:
+      context: ./services/kafka_consumer
+    depends_on:
+      - kafka
+      - rabbitmq
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - RABBITMQ_HOST=rabbitmq
+
 
 
   order-api:
