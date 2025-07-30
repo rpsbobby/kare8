@@ -1,21 +1,21 @@
-import os
-from messaging.kafka_backend import KafkaBroker
-from messaging.rabbitmq_backend import RabbitMQBroker
+from messaging.factories.kafka_factory import get_kafka_consumer
+from messaging.factories.rabbitmq_factory import get_rabbitmq_publisher
+import time
+
 
 def handle_order(order):
     print(f"Received order from Kafka: {order}")
-    rabbitmq.publish("send-email", order)
-    rabbitmq.publish("generate-invoice", order)
+    rabbitmq_publisher.publish("send-email", order)
+    rabbitmq_publisher.publish("generate-invoice", order)
+
 
 if __name__ == "__main__":
-    kafka_host = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-    rabbitmq_host = os.getenv("RABBITMQ_HOST", "rabbitmq")
-    kafka = KafkaBroker(kafka_host, group_id="kare8-consumer")
-    rabbitmq = RabbitMQBroker(rabbitmq_host, 5672)
+    kafka_consumer = get_kafka_consumer()
+    rabbitmq_publisher = get_rabbitmq_publisher()
 
-    kafka.subscribe("orders", handle_order)
+    kafka_consumer.subscribe("orders", handle_order)
 
     print("Kafka Consumer is running...")
-    import time
+
     while True:
         time.sleep(1)
