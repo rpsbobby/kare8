@@ -18,6 +18,5 @@ class Order(BaseModel):
 
 @app.post("/order")
 def create_order(order: Order):
-    # Publish the order to the Kafka topic
     kafka_producer.publish("orders", order.model_dump())
     return {"status": "received", "order": order}
