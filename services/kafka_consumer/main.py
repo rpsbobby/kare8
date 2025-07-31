@@ -5,7 +5,6 @@ import time
 
 def handle_order(order):
     print(f"Received order from Kafka: {order}")
-    rabbitmq_publisher.publish("send-email", order)
     rabbitmq_publisher.publish("generate-invoice", order)
 
 
