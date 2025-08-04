@@ -1,7 +1,11 @@
 import aio_pika
 import json
 from typing import Dict
+
+from aiormq import AMQPException
+
 from utils.logger import get_logger
+from utils.retry import async_retry_with_backoff
 
 from messaging_interfaces.rabbitmq.rabbitmq_publisher_interface import RabbitMqPublisherInterface
 logger = get_logger("async-rabbitmq-publisher")
@@ -22,6 +26,7 @@ class AsyncRabbitMQPublisher(RabbitMqPublisherInterface):
             self._channel = await self._connection.channel()
             logger.info("✅ Connected to RabbitMQ (async)")
 
+    @async_retry_with_backoff(max_attempts=5, base_delay=1, exceptions=(aio_pika.exceptions.AMQPException,), logger=logger)
     async def publish(self, queue: str, message: Dict):
         await self._init()
         await self._channel.declare_queue(queue, durable=True)
