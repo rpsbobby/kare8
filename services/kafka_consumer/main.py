@@ -1,3 +1,6 @@
+import asyncio
+import threading
+
 from messaging.factories.kafka_factory import get_kafka_consumer
 from messaging.factories.rabbitmq_factory import get_rabbitmq_publisher
 import time
@@ -5,11 +8,23 @@ import time
 from utils.logger import get_logger
 
 logger = get_logger("kafka_consumer")
+event_loop = asyncio.get_event_loop()
+asyncio.set_event_loop(event_loop)
+loop_thread = threading.Thread(target=event_loop.run_forever, daemon=True)
+loop_thread.start()
 
 
 def handle_order(order):
-    logger.info(f"Received order from Kafka: {order}")
-    rabbitmq_publisher.publish("generate-invoice", order)
+    print(f"[INFO] Received order from Kafka: {order}")
+
+    async def safe_publish():
+        try:
+            await rabbitmq_publisher.publish("generate-invoice", order)
+        except Exception as e:
+            print(f"[ERROR] Failed to publish message: {e}")
+
+    # Schedule the coroutine to run in the event loop
+    asyncio.run_coroutine_threadsafe(safe_publish(), event_loop)
 
 
 if __name__ == "__main__":

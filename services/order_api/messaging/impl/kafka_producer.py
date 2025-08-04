@@ -6,6 +6,7 @@ from confluent_kafka import Producer
 
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from utils.logger import get_logger
+from utils.retry import retry_with_backoff
 
 logger = get_logger("order_api_KafkaProducer")
 
@@ -28,6 +29,7 @@ class KafkaProducer(KafkaProducerInterface):
             else:
                 raise ConnectionError("Kafka failed to connect after 10 retries")
 
+    @retry_with_backoff(logger=logger)
     def produce(self, topic: str, message: Dict):
         self._init_producer()
         try:
