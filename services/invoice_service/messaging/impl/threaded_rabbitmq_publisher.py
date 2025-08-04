@@ -7,7 +7,9 @@ from typing import Dict
 import pika
 
 from messaging_interfaces.rabbitmq.rabbitmq_publisher_interface import RabbitMqPublisherInterface
+from utils.logger import get_logger
 
+logger = get_logger("invoice_service.ThreadedRabbitMQPublisher")
 
 class ThreadedRabbitMQPublisher(RabbitMqPublisherInterface):
     def __init__(self, host="rabbitmq", port=5672):
@@ -21,20 +23,20 @@ class ThreadedRabbitMQPublisher(RabbitMqPublisherInterface):
 
         self._init_connection_with_retry()
         self._thread.start()
-        print("🚀 ThreadedRabbitMQPublisher initialized.")
+        logger.info("🚀 ThreadedRabbitMQPublisher initialized.")
 
     def _init_connection_with_retry(self):
         for i in range(10):
             try:
-                print(f"🔌 Connecting to RabbitMQ ({i + 1}/10)...")
+                logger.info(f"🔌 Connecting to RabbitMQ ({i + 1}/10)...")
                 self._connection = pika.BlockingConnection(
                     pika.ConnectionParameters(host=self._host, port=self._port)
                 )
                 self._channel = self._connection.channel()
-                print("✅ RabbitMQ connection established.")
+                logger.info("✅ RabbitMQ connection established.")
                 return
             except pika.exceptions.AMQPConnectionError:
-                print("❌ Connection failed, retrying...")
+                logger.info("❌ Connection failed, retrying...")
                 time.sleep(3)
         raise ConnectionError("❌ Failed to connect to RabbitMQ after 10 retries")
 
@@ -49,11 +51,11 @@ class ThreadedRabbitMQPublisher(RabbitMqPublisherInterface):
                     body=json.dumps(message),
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
-                print(f"📬 Published to '{queue_name}': {message}")
+                logger.info(f"📬 Published to '{queue_name}': {message}")
             except Empty:
                 continue
             except Exception as e:
-                print(f"❌ Error in publisher thread: {e}")
+                logger.info(f"❌ Error in publisher thread: {e}")
                 time.sleep(1)
 
     def publish(self, queue: str, message: Dict):
@@ -64,4 +66,4 @@ class ThreadedRabbitMQPublisher(RabbitMqPublisherInterface):
         self._thread.join()
         if self._connection:
             self._connection.close()
-        print("🛑 ThreadedRabbitMQPublisher stopped.")
+        logger.info("🛑 ThreadedRabbitMQPublisher stopped.")

@@ -6,6 +6,9 @@ from typing import Callable, Dict
 import pika
 
 from messaging_interfaces.rabbitmq.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
+from utils.logger import get_logger
+
+logger = get_logger("email_service_RabbitMQSubscriber")
 
 
 class RabbitMQSubscriber(RabbitMqSubscriberInterface):
@@ -19,13 +22,13 @@ class RabbitMQSubscriber(RabbitMqSubscriberInterface):
         if self._connection is None or self._channel is None:
             for i in range(10):
                 try:
-                    print(f"📡 Connecting to RabbitMQ ({self.host}:{self.port}) [attempt {i + 1}/10]...")
+                    logger.info(f"📡 Connecting to RabbitMQ ({self.host}:{self.port}) [attempt {i + 1}/10]...")
                     self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
                     self._channel = self._connection.channel()
-                    print("✅ RabbitMQ consumer connected.")
+                    logger.info("✅ RabbitMQ consumer connected.")
                     break
                 except pika.exceptions.AMQPConnectionError as e:
-                    print(f"❌ Connection failed: {e}")
+                    logger.info(f"❌ Connection failed: {e}")
                     time.sleep(3)
             else:
                 raise ConnectionError("Failed to connect to RabbitMQ after 10 attempts.")
@@ -38,14 +41,14 @@ class RabbitMQSubscriber(RabbitMqSubscriberInterface):
 
             def callback(ch, method, properties, body):
                 data = json.loads(body)
-                print(f"📥 Received message from '{queue}': {data}")
+                logger.info(f"📥 Received message from '{queue}': {data}")
                 on_message(data)
                 ch.basic_ack(delivery_tag=method.delivery_tag)
 
             self._channel.basic_qos(prefetch_count=1)
             self._channel.basic_consume(queue=queue, on_message_callback=callback)
 
-            print(f"🎧 Listening on RabbitMQ queue: {queue}")
+            logger.info(f"🎧 Listening on RabbitMQ queue: {queue}")
             self._channel.start_consuming()
 
         thread = threading.Thread(target=_consume, daemon=True)
