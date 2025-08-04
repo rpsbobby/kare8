@@ -26,7 +26,7 @@ class KafkaProducer(KafkaProducerInterface):
             else:
                 raise ConnectionError("Kafka failed to connect after 10 retries")
 
-    def publish(self, topic: str, message: Dict):
+    def produce(self, topic: str, message: Dict):
         self._init_producer()
         try:
             print(f'📤 Publishing to topic "{topic}": {message}')

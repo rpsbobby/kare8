@@ -32,7 +32,7 @@ class KafkaConsumer(KafkaConsumerInterface):
             else:
                 raise ConnectionError("Failed to connect to Kafka after 10 retries")
 
-    def subscribe(self, topic: str, on_message: Callable):
+    def consume(self, topic: str, on_message: Callable):
         self._init_consumer()
 
         def _listen():

@@ -17,5 +17,5 @@ class Order(BaseModel):
 
 @app.post("/order")
 def create_order(order: Order):
-    kafka_producer.publish("orders", order.model_dump())
+    kafka_producer.produce("orders", order.model_dump())
     return {"status": "received", "order": order}

@@ -13,7 +13,7 @@ if __name__ == "__main__":
     kafka_consumer = get_kafka_consumer()
     rabbitmq_publisher = get_rabbitmq_publisher()
 
-    kafka_consumer.subscribe("orders", handle_order)
+    kafka_consumer.consume("orders", handle_order)
 
     while True:
         time.sleep(1)

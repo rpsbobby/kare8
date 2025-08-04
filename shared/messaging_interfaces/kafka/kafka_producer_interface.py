@@ -4,5 +4,5 @@ from typing import Dict
 
 class KafkaProducerInterface(ABC):
     @abstractmethod
-    def publish(self, topic: str, message: Dict):
+    def produce(self, topic: str, message: Dict):
         pass
