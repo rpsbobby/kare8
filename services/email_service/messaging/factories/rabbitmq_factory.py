@@ -1,7 +1,7 @@
 import os
 
+from messaging_interfaces.rabbitmq.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
 from ..impl.rabbitmq_subscriber import RabbitMQSubscriber
-from ..interfaces.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
 
 
 def get_rabbitmq_subscriber() -> RabbitMqSubscriberInterface:

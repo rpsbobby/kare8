@@ -1,11 +1,12 @@
-import pika
 import json
 import threading
 import time
-from typing import Dict
 from queue import Queue, Empty
+from typing import Dict
 
-from ..interfaces.rabbitmq_publisher_interface import RabbitMqPublisherInterface
+import pika
+
+from messaging_interfaces.rabbitmq.rabbitmq_publisher_interface import RabbitMqPublisherInterface
 
 
 class ThreadedRabbitMQPublisher(RabbitMqPublisherInterface):

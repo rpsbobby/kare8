@@ -1,10 +1,11 @@
 import json
-import time
 import threading
+import time
 from typing import Callable
 
 from confluent_kafka import Consumer
-from ..interfaces.kafka_consumer_interface import KafkaConsumerInterface
+
+from messaging_interfaces.kafka.kafka_consumer_interface import KafkaConsumerInterface
 
 
 class KafkaConsumer(KafkaConsumerInterface):

@@ -2,11 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from messaging.factories.kafka_factory import get_kafka_producer
-from messaging.interfaces.kafka_producer_interface import KafkaProducerInterface
 
 app = FastAPI()
 
-kafka_producer: KafkaProducerInterface = get_kafka_producer();
+kafka_producer = get_kafka_producer();
 
 
 class Order(BaseModel):

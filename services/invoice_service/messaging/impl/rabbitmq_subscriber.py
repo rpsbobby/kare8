@@ -5,7 +5,7 @@ from typing import Callable, Dict
 
 import pika
 
-from ..interfaces.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
+from messaging_interfaces.rabbitmq.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
 
 
 class RabbitMQSubscriber(RabbitMqSubscriberInterface):

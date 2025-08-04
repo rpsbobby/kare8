@@ -1,16 +1,11 @@
-FROM python:3.10-slim
+FROM kare8-shared:latest
 
-# Set working directory
 WORKDIR /app
 
-# Copy service source code
 COPY . .
 
-# Install dependencies
-RUN pip install --no-cache-dir pika
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set optional Python path if needed
-# ENV PYTHONPATH=/app
+ENV PYTHONPATH="/app:/opt/pythonlibs"
 
-# Run the service
 CMD ["python", "main.py"]

@@ -28,7 +28,6 @@ services:
     depends_on:
       - zookeeper
 
-
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -44,11 +43,11 @@ services:
     logging:
       driver: "none"
 
-
-
   kafka-consumer:
     build:
       context: ./services/kafka_consumer
+    volumes:
+      - ./services/kafka_consumer:/app
     depends_on:
       kafka:
         condition: service_healthy
@@ -57,34 +56,42 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - RABBITMQ_HOST=rabbitmq
-
+      - PYTHONPATH=/app:/opt/pythonlibs
 
   invoice-service:
     build:
       context: ./services/invoice_service
+    volumes:
+      - ./services/invoice_service:/app
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
       rabbitmq:
         condition: service_healthy
-    environment:
-      - RABBITMQ_HOST=rabbitmq
 
   email-service:
     build:
       context: ./services/email_service
+    volumes:
+      - ./services/email_service:/app
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
       rabbitmq:
         condition: service_healthy
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-
 
   order-api:
     build:
       context: ./services/order_api
+    volumes:
+      - ./services/order_api:/app
     ports:
       - "8000:8000"
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
       kafka:
         condition: service_healthy

@@ -1,7 +1,7 @@
 import os
 
+from messaging_interfaces.rabbitmq.rabbitmq_publisher_interface import RabbitMqPublisherInterface
 from ..impl.threaded_rabbitmq_publisher import ThreadedRabbitMQPublisher
-from ..interfaces.rabbitmq_publisher_interface import RabbitMqPublisherInterface
 
 
 def get_rabbitmq_publisher() -> RabbitMqPublisherInterface:

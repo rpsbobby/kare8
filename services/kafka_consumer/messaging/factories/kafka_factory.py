@@ -1,7 +1,7 @@
 import os
 
+from messaging_interfaces.kafka.kafka_consumer_interface import KafkaConsumerInterface
 from ..impl.kafka_consumer import KafkaConsumer
-from ..interfaces.kafka_consumer_interface import KafkaConsumerInterface
 
 
 def get_kafka_consumer() -> KafkaConsumerInterface:

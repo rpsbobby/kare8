@@ -3,7 +3,8 @@ import time
 from typing import Dict
 
 import pika
-from ..interfaces.rabbitmq_publisher_interface import RabbitMqPublisherInterface
+
+from messaging_interfaces.rabbitmq.rabbitmq_publisher_interface import RabbitMqPublisherInterface
 
 
 class RabbitMQPublisher(RabbitMqPublisherInterface):

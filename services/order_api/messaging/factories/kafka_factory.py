@@ -1,7 +1,5 @@
-import os
-
+from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from ..impl.kafka_producer import KafkaProducer
-from ..interfaces.kafka_producer_interface import KafkaProducerInterface
 
 
 def get_kafka_producer() -> KafkaProducerInterface:

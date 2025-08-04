@@ -1,0 +1,1 @@
+curl -X POST http://localhost:8000/order -H "Content-Type: application/json" -d '{"order_id": "123", "user_id": "u001", "items": ["apple", "banana"], "total": 42.5}'

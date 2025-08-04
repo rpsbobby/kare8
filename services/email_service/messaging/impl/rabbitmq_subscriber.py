@@ -5,7 +5,7 @@ from typing import Callable, Dict
 
 import pika
 
-from ..interfaces.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
+from messaging_interfaces.rabbitmq.rabbitmq_subcriber_interface import RabbitMqSubscriberInterface
 
 
 class RabbitMQSubscriber(RabbitMqSubscriberInterface):
@@ -19,10 +19,8 @@ class RabbitMQSubscriber(RabbitMqSubscriberInterface):
         if self._connection is None or self._channel is None:
             for i in range(10):
                 try:
-                    print(f"📡 Connecting to RabbitMQ ({self.host}:{self.port}) [attempt {i+1}/10]...")
-                    self._connection = pika.BlockingConnection(
-                        pika.ConnectionParameters(host=self.host, port=self.port)
-                    )
+                    print(f"📡 Connecting to RabbitMQ ({self.host}:{self.port}) [attempt {i + 1}/10]...")
+                    self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
                     self._channel = self._connection.channel()
                     print("✅ RabbitMQ consumer connected.")
                     break

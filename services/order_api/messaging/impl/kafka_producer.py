@@ -1,9 +1,10 @@
 import json
 import time
 from typing import Dict
+
 from confluent_kafka import Producer
 
-from ..interfaces.kafka_producer_interface import KafkaProducerInterface
+from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 
 
 class KafkaProducer(KafkaProducerInterface):
