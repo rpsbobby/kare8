@@ -1,0 +1,26 @@
+services:
+  order_api:
+    # Optional: swap to local build while developing this service
+    # build:
+    #   context: ./services/order_api
+    #   dockerfile: Dockerfile
+    volumes:
+      - ./services/order_api/app:/app/app
+
+  kafka_consumer:
+    # build:
+    #   context: ./services/kafka_consumer
+    volumes:
+      - ./services/kafka_consumer/app:/app/app
+
+  invoice_service:
+    # build:
+    #   context: ./services/invoice_service
+    volumes:
+      - ./services/invoice_service/app:/app/app
+
+  email_service:
+    # build:
+    #   context: ./services/email_service
+    volumes:
+      - ./services/email_service/app:/app/app

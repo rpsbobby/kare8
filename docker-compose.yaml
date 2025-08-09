@@ -1,4 +1,45 @@
+
+x-image-tag: &image_tag ${IMAGE_TAG:-develop}  # default 'develop', can set to a SHA
+
 services:
+  kafka-consumer:
+    image: ghcr.io/rpsbobby/kare8-kafka_consumer:${IMAGE_TAG:-develop}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
+
+  invoice-service:
+    image: ghcr.io/rpsbobby/kare8-invoice_service:${IMAGE_TAG:-develop}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
+
+  email-service:
+    image: ghcr.io/rpsbobby/kare8-email_service:${IMAGE_TAG:-develop}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
+
+  order-api:
+    image: ghcr.io/rpsbobby/kare8-order_api:${IMAGE_TAG:-develop}
+    ports:
+      - "8000:8000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
+
   zookeeper:
     image: bitnami/zookeeper:latest
     environment:
@@ -28,52 +69,4 @@ services:
     depends_on:
       - zookeeper
 
-  kafka-consumer:
-    build:
-      context: ./services/kafka_consumer
-    volumes:
-      - ./services/kafka_consumer:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - PYTHONPATH=/app:/opt/pythonlibs
 
-  invoice-service:
-    build:
-      context: ./services/invoice_service
-    volumes:
-      - ./services/invoice_service:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - PYTHONPATH=/app:/opt/pythonlibs
-
-  email-service:
-    build:
-      context: ./services/email_service
-    volumes:
-      - ./services/email_service:/app
-    depends_on:
-      kafka:
-        condition: service_healthy
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - PYTHONPATH=/app:/opt/pythonlibs
-
-  order-api:
-    build:
-      context: ./services/order_api
-    volumes:
-      - ./services/order_api:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      kafka:
-        condition: service_healthy
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - PYTHONPATH=/app:/opt/pythonlibs
