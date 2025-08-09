@@ -1,4 +1,5 @@
-FROM kare8-shared:latest
+ARG BASE_IMAGE_TAG=latest
+FROM ghcr.io/rpsbobby/kare8-shared:${BASE_IMAGE_TAG}
 
 WORKDIR /app
 
