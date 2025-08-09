@@ -28,21 +28,6 @@ services:
     depends_on:
       - zookeeper
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_LOG_LEVEL=error
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "none"
-
   kafka-consumer:
     build:
       context: ./services/kafka_consumer
@@ -51,11 +36,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - RABBITMQ_HOST=rabbitmq
       - PYTHONPATH=/app:/opt/pythonlibs
 
   invoice-service:
@@ -63,24 +45,24 @@ services:
       context: ./services/invoice_service
     volumes:
       - ./services/invoice_service:/app
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
-      rabbitmq:
+      kafka:
         condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
 
   email-service:
     build:
       context: ./services/email_service
     volumes:
       - ./services/email_service:/app
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
-      rabbitmq:
+      kafka:
         condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs
 
   order-api:
     build:
@@ -89,9 +71,9 @@ services:
       - ./services/order_api:/app
     ports:
       - "8000:8000"
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - PYTHONPATH=/app:/opt/pythonlibs
     depends_on:
       kafka:
         condition: service_healthy
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONPATH=/app:/opt/pythonlibs

@@ -8,7 +8,7 @@ from ..impl.kafka_producer import KafkaProducer
 
 def get_kafka_consumer() -> KafkaConsumerInterface:
     kafka_host = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-    return KafkaConsumer(kafka_host, group_id="kare8-consumer")
+    return KafkaConsumer(kafka_host, group_id="invoice-consumer")
 
 def get_kafka_producer() -> KafkaProducerInterface:
     kafka_host = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
