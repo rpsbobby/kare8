@@ -19,7 +19,7 @@ def handle_generate_invoice(order: Order):
         total=order["total"],
         issued_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
     )
-    kafka_producer.produce(SEND_EMAIL, invoice)
+    kafka_producer.produce(SEND_EMAIL, invoice.model_dump())
     logger.info(f"🧾 Invoice generated and sent to email topic: {invoice}")
 
 
