@@ -8,6 +8,7 @@ COPY . .
 RUN mkdir -p /opt/pythonlibs && \
     cp -r messaging_interfaces /opt/pythonlibs/ && \
     cp -r utils /opt/pythonlibs/ && \
+    cp -r topics /opt/pythonlibs/ && \
     chmod -R a+r /opt/pythonlibs
 
 ENV PYTHONPATH="/opt/pythonlibs"
