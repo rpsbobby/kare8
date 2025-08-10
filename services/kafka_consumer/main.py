@@ -2,6 +2,7 @@ from messaging.factories.kafka_factory import get_kafka_consumer, get_kafka_prod
 import time
 
 from utils.logger import get_logger
+from topics.topics import ORDERS
 
 logger = get_logger("kafka_consumer")
 
@@ -17,7 +18,7 @@ if __name__ == "__main__":
     kafka_consumer = get_kafka_consumer()
     kafka_producer = get_kafka_producer()
     logger.info("[INFO] Connected to Kafka. Subscribing to 'orders' topic...")
-    kafka_consumer.consume("orders", handle_order)
+    kafka_consumer.consume(ORDERS, handle_order)
     logger.info("[INFO] Subscribed to 'orders' topic. Waiting for messages...")
 
     while True:
