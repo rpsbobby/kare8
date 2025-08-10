@@ -8,8 +8,8 @@ from topics.topics import SEND_EMAIL
 logger = get_logger("email_service")
 
 def handle_email_request(message: Invoice):
-    user = message.get("user_id", "unknown")
-    order_id = message.get("order_id", "N/A")
+    user = message.user_id
+    order_id = message.order_id
     logger.info(f"📧 Sending confirmation email to user '{user}' for order '{order_id}'...")
 
 

@@ -12,11 +12,11 @@ def handle_generate_invoice(order: Order):
     logger.info(f"🧾 Generating invoice for order {order['order_id']}...")
 
     invoice = Invoice(
-        invoice_id=f"inv-{order['order_id']}",
-        order_id=order["order_id"],
-        user_id=order["user_id"],
-        items=order["items"],
-        total=order["total"],
+        invoice_id=f"inv-{order.order_id}",
+        order_id=order.order_id,
+        user_id=order.user_id,
+        items=order.items,
+        total=order.total,
         issued_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
     )
     kafka_producer.produce(SEND_EMAIL, invoice.model_dump())
