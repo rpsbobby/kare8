@@ -1,5 +1,7 @@
 import time
 
+from pydantic import ValidationError
+
 from entities.order import Order
 from messaging.factories.kafka_factory import get_kafka_consumer, get_kafka_producer
 from utils.logger import get_logger
@@ -31,7 +33,12 @@ if __name__ == "__main__":
     logger.info("Connected to Kafka. Subscribing to 'generate-invoice' topic...")
     def wrapped_handler(message: dict):
         logger.info(f"[INFO] Received message from 'generate-invoice' topic: {message}, parsing to handler...")
-        order = Order.model_validate(message)
+        try :
+            order = Order.model_validate(message)
+            logger.debug(f"[DEBUG] Received order from 'generate-invoice' topic: {order.order_id}")
+        except ValidationError as e:
+            logger.error(f"[ERROR] Validation error: {e}")
+            return
         handle_generate_invoice(order)
 
     kafka_consumer.consume(GENERATE_INVOICE, wrapped_handler)
