@@ -1,22 +1,16 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from entities.order import Order
 from messaging.factories.kafka_factory import get_kafka_producer
 from utils.logger import get_logger
 from topics.topics import ORDERS
-app = FastAPI()
 
+app = FastAPI()
 
 logger = get_logger("order_api")
 
 kafka_producer = get_kafka_producer();
-
-
-class Order(BaseModel):
-    order_id: str
-    user_id: str
-    items: list
-    total: float
 
 
 @app.post("/order")
