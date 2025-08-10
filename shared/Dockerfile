@@ -4,6 +4,8 @@ WORKDIR /shared
 
 COPY . .
 
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Install shared modules into /opt/pythonlibs
 RUN mkdir -p /opt/pythonlibs && \
     cp -r messaging_interfaces /opt/pythonlibs/ && \
