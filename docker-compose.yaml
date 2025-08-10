@@ -4,6 +4,7 @@ x-image-tag: &image_tag ${IMAGE_TAG:-develop}  # default 'develop', can set to a
 services:
   kafka-consumer:
     image: ghcr.io/rpsbobby/kare8-kafka_consumer:${IMAGE_TAG:-develop}
+    pull_policy: always
     depends_on:
       kafka:
         condition: service_healthy
@@ -13,6 +14,7 @@ services:
 
   invoice-service:
     image: ghcr.io/rpsbobby/kare8-invoice_service:${IMAGE_TAG:-develop}
+    pull_policy: always
     depends_on:
       kafka:
         condition: service_healthy
@@ -22,6 +24,7 @@ services:
 
   email-service:
     image: ghcr.io/rpsbobby/kare8-email_service:${IMAGE_TAG:-develop}
+    pull_policy: always
     depends_on:
       kafka:
         condition: service_healthy
@@ -31,6 +34,7 @@ services:
 
   order-api:
     image: ghcr.io/rpsbobby/kare8-order_api:${IMAGE_TAG:-develop}
+    pull_policy: always
     ports:
       - "8000:8000"
     depends_on:
