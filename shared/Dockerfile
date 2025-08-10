@@ -6,9 +6,11 @@ COPY . .
 
 # Install shared modules into /opt/pythonlibs
 RUN mkdir -p /opt/pythonlibs && \
-    cp -r messaging_interfaces /opt/pythonlibs/ && \
-    cp -r utils /opt/pythonlibs/ && \
-    cp -r topics /opt/pythonlibs/ && \
+#    cp -r messaging_interfaces /opt/pythonlibs/ && \
+#    cp -r utils /opt/pythonlibs/ && \
+#    cp -r topics /opt/pythonlibs/ && \
+# cp -r entities /opt/pythonlibs/ && \
+    cp -r * /opt/pythonlibs/ && \
     chmod -R a+r /opt/pythonlibs
 
 ENV PYTHONPATH="/opt/pythonlibs"
