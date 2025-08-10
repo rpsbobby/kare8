@@ -30,6 +30,7 @@ if __name__ == "__main__":
 
     logger.info("Connected to Kafka. Subscribing to 'generate-invoice' topic...")
     def wrapped_handler(message: dict):
+        logger.info(f"[INFO] Received message from 'generate-invoice' topic: {message}, parsing to handler...")
         order = Order.model_validate(message)
         handle_generate_invoice(order)
 
