@@ -1,5 +1,6 @@
 # All Kafka topics in one place
 
+# Main topics
 ORDERS = "orders"
 GENERATE_INVOICE = "generate-invoice"
 SEND_EMAIL = "send-email"
@@ -9,11 +10,20 @@ ORDERS_DLQ = f"{ORDERS}.dlq"
 GENERATE_INVOICE_DLQ = f"{GENERATE_INVOICE}.dlq"
 SEND_EMAIL_DLQ = f"{SEND_EMAIL}.dlq"
 
+# Park topics
+
+ORDERS_PARK = f"{ORDERS}.park"
+GENERATE_INVOICE_PARK = f"{GENERATE_INVOICE}.park"
+SEND_EMAIL_PARK = f"{SEND_EMAIL}.park"
+
 ALL_TOPICS = [
     ORDERS,
     GENERATE_INVOICE,
     SEND_EMAIL,
     ORDERS_DLQ,
     GENERATE_INVOICE_DLQ,
-    SEND_EMAIL_DLQ
+    SEND_EMAIL_DLQ,
+    ORDERS_PARK,
+    GENERATE_INVOICE_PARK,
+    SEND_EMAIL_PARK
 ]
