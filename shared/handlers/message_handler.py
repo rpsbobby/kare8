@@ -8,8 +8,8 @@ from entities.dlq_message import DLQMessage
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from workers.worker import Worker
 
-T = TypeVar("T", bound=BaseModel)
-V = TypeVar("V", bound=BaseModel)
+T=TypeVar("T", bound=BaseModel)
+V=TypeVar("V", bound=BaseModel)
 
 
 class MessageHandler(Generic[T, V]):
@@ -25,16 +25,16 @@ class MessageHandler(Generic[T, V]):
             logger: Logger,
             max_attempts: int = 3,
             ):
-        self.producer = kafka_producer
-        self.worker = worker
-        self.model_in = model_in
-        self.topic_in = topic_in
-        self.topic_out = topic_out
-        self.dlq_topic = dlq_topic
-        self.park_topic = park_topic
-        self.is_dlq = topic_in.endswith(".dlq")
-        self.logger = logger
-        self.max_attempts = max_attempts
+        self.producer=kafka_producer
+        self.worker=worker
+        self.model_in=model_in
+        self.topic_in=topic_in
+        self.topic_out=topic_out
+        self.dlq_topic=dlq_topic
+        self.park_topic=park_topic
+        self.is_dlq=topic_in.endswith(".dlq")
+        self.logger=logger
+        self.max_attempts=max_attempts
 
     # --- Entry point ---
     def handle_message(
@@ -56,13 +56,13 @@ class MessageHandler(Generic[T, V]):
             key: Optional[bytes],
             headers: Optional[dict[str, str]],
             ) -> None:
-        obj = self.model_in.model_validate(message)
+        obj=self.model_in.model_validate(message)
         try:
-            res = self._process(obj)
+            res=self._process(obj)
         except Exception as e:
-            now = datetime.now(timezone.utc)
-            trace_id = (headers or {}).get("x-trace-id") or str(uuid.uuid4())
-            dlq = DLQMessage(
+            now=datetime.now(timezone.utc)
+            trace_id=(headers or {}).get("x-trace-id") or str(uuid.uuid4())
+            dlq=DLQMessage(
                 payload=obj.model_dump(),
                 origin_topic=self.topic_in,
                 current_topic=self.dlq_topic,
@@ -74,7 +74,7 @@ class MessageHandler(Generic[T, V]):
                 error_code=type(e).__name__,
                 intended_next_topic=self.topic_out,
                 )
-            dlq_headers = self._merge_headers(
+            dlq_headers=self._merge_headers(
                 headers,
                 {
                     "x-trace-id": trace_id,
@@ -88,7 +88,7 @@ class MessageHandler(Generic[T, V]):
             return
 
         # success → next hop
-        out_headers = self._merge_headers(
+        out_headers=self._merge_headers(
             headers,
             {
                 "x-trace-id": (headers or {}).get("x-trace-id") or str(uuid.uuid4()),
@@ -105,18 +105,18 @@ class MessageHandler(Generic[T, V]):
             key: Optional[bytes],
             headers: Optional[dict[str, str]],
             ) -> None:
-        dlq = DLQMessage.model_validate(message)
-        next_hop = dlq.intended_next_topic or self.topic_out
+        dlq=DLQMessage.model_validate(message)
+        next_hop=dlq.intended_next_topic or self.topic_out
 
         # If payload is no longer valid → park
         try:
-            obj = self.model_in.model_validate(dlq.payload)
+            obj=self.model_in.model_validate(dlq.payload)
         except Exception as e:
-            dlq.last_error = str(e)
-            dlq.error_code = type(e).__name__
-            dlq.last_attempt_ts = datetime.now(timezone.utc)
-            dlq.current_topic = self.park_topic
-            park_headers = self._merge_headers(
+            dlq.last_error=str(e)
+            dlq.error_code=type(e).__name__
+            dlq.last_attempt_ts=datetime.now(timezone.utc)
+            dlq.current_topic=self.park_topic
+            park_headers=self._merge_headers(
                 headers,
                 {
                     "x-trace-id": dlq.trace_id,
@@ -128,16 +128,16 @@ class MessageHandler(Generic[T, V]):
             return
 
         try:
-            res = self._process(obj)
+            res=self._process(obj)
         except Exception as e:
-            dlq.attempts += 1
-            dlq.last_attempt_ts = datetime.now(timezone.utc)
-            dlq.current_topic = self.dlq_topic
-            dlq.intended_next_topic = next_hop
-            dlq.last_error = str(e)
-            dlq.error_code = type(e).__name__
+            dlq.attempts+=1
+            dlq.last_attempt_ts=datetime.now(timezone.utc)
+            dlq.current_topic=self.dlq_topic
+            dlq.intended_next_topic=next_hop
+            dlq.last_error=str(e)
+            dlq.error_code=type(e).__name__
 
-            fail_headers = self._merge_headers(
+            fail_headers=self._merge_headers(
                 headers,
                 {
                     "x-trace-id": dlq.trace_id,
@@ -147,14 +147,14 @@ class MessageHandler(Generic[T, V]):
                 )
 
             if dlq.attempts >= self.max_attempts:
-                dlq.current_topic = self.park_topic
+                dlq.current_topic=self.park_topic
                 self._produce(self.park_topic, dlq.model_dump(), key=key, headers=fail_headers)
             else:
                 self._produce(self.dlq_topic, dlq.model_dump(), key=key, headers=fail_headers)
             return
 
         # replay success → intended next hop
-        success_headers = self._merge_headers(
+        success_headers=self._merge_headers(
             headers,
             {
                 "x-trace-id": dlq.trace_id,
@@ -180,6 +180,6 @@ class MessageHandler(Generic[T, V]):
     def _merge_headers(
             self, base: Optional[dict[str, str]], extra: dict[str, str]
             ) -> dict[str, str]:
-        h = dict(base or {})
+        h=dict(base or {})
         h.update({k: str(v) for k, v in extra.items()})
         return h

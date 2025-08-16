@@ -7,11 +7,11 @@ from confluent_kafka import Consumer
 from messaging_interfaces.kafka.kafka_consumer_interface import KafkaConsumerInterface
 from utils.logger import get_logger
 
-logger = get_logger("invoice_service")
+logger = get_logger("kafka_consumer")
 
 
 class KafkaConsumer(KafkaConsumerInterface):
-    def __init__(self, bootstrap_servers: str, group_id: str = "invoice-consumer"):
+    def __init__(self, bootstrap_servers: str, group_id: str = "kare8-consumer"):
         self.bootstrap_servers = bootstrap_servers
         self.group_id = group_id
         self._consumer = None
@@ -23,11 +23,10 @@ class KafkaConsumer(KafkaConsumerInterface):
             for i in range(10):
                 try:
                     logger.info(f"Connecting to Kafka consumer (attempt {i + 1}/10)...")
-                    self._consumer = Consumer({
-                        'bootstrap.servers': self.bootstrap_servers,
-                        'group.id': self.group_id,
-                        'auto.offset.reset': 'earliest'
-                    })
+                    self._consumer = Consumer(
+                        {'bootstrap.servers': self.bootstrap_servers, 'group.id': self.group_id, 'auto.offset.reset': 'earliest',
+                            'enable.auto.commit': False,
+                            'enable.auto.offset.store': False})
                     logger.info("✅ Kafka consumer connected")
                     break
                 except Exception as e:
@@ -53,16 +52,30 @@ class KafkaConsumer(KafkaConsumerInterface):
                         logger.warning(f"❌ Kafka consumer error: {msg.error()}")
                         continue
 
-                    data = json.loads(msg.value().decode('utf-8'))
+                    key = msg.key()  # bytes | None
+                    raw_headers = msg.headers() or []  # list[(str, bytes|None)]
+                    headers = {k: (v.decode() if isinstance(v, (bytes, bytearray)) else (v or "")) for k, v in raw_headers}
 
                     try:
-                        on_message(data)
+                        data = json.loads(msg.value().decode("utf-8"))
+                    except Exception as e:
+                        logger.error(f"🧨 JSON decode failed at {msg.topic()}[{msg.partition()}]@{msg.offset()}: {e}")
+                        # Option: send to a raw.dlq; for now just skip & commit
+                        self._consumer.store_offsets(msg)
+                        self._consumer.commit(msg, asynchronous=False)
+                        continue
+
+                    try:
+                        on_message(data, key, headers)
+                        self._consumer.store_offsets(msg)
+                        self._consumer.commit(msg, asynchronous=False)
                     except Exception as e:
                         logger.error(f"💥 Error in message handler: {e} — data: {data}")
-                        # Optional: forward to DLQ here
                 except Exception as e:
                     logger.error(f"⚠️ Unexpected error in consumer loop: {e}")
-                    time.sleep(2)
+                    self._consumer.store_offsets(msg)
+                    self._consumer.commit(msg, asynchronous=False)
+                    continue
 
             logger.info("🛑 Kafka consumer loop exited")
 
@@ -71,9 +84,10 @@ class KafkaConsumer(KafkaConsumerInterface):
 
     def stop(self):
         self._running = False
+        if self._consumer:
+            self._consumer.wakeup()  # break poll() promptly
         if self._thread:
             self._thread.join(timeout=5)
         if self._consumer:
             self._consumer.close()
-            logger.info("✅ Kafka consumer connection closed")
         logger.info("🧼 Kafka consumer stopped cleanly")

@@ -66,7 +66,6 @@ class KafkaConsumer(KafkaConsumerInterface):
                         continue
 
                     try:
-                        # Updated signature: handler(message, key, headers)
                         on_message(data, key, headers)
                         self._consumer.store_offsets(msg)
                         self._consumer.commit(msg, asynchronous=False)
