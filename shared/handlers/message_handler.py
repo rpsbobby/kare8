@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, Type, Generic, TypeVar
+from typing import Dict, Any, Type, Generic, TypeVar, Optional
 from logging import Logger
 from pydantic import BaseModel
 
@@ -9,13 +9,14 @@ from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInt
 from workers.worker import Worker
 
 T = TypeVar("T", bound=BaseModel)
+V = TypeVar("V", bound=BaseModel)
 
-class MessageHandler(Generic[T]):
+class MessageHandler(Generic[T,V]):
     def __init__(
         self,
         kafka_producer: KafkaProducerInterface,
-        worker: Worker[T],
-        model_cls: Type[T],
+        worker: Worker[T,V],
+        model_in: Type[T],
         topic_in: str,
         topic_out: str,
         dlq_topic: str,
@@ -25,7 +26,7 @@ class MessageHandler(Generic[T]):
     ):
         self.producer = kafka_producer
         self.worker = worker
-        self.model_cls = model_cls
+        self.model_in = model_in
         self.topic_in = topic_in
         self.topic_out = topic_out
         self.dlq_topic = dlq_topic
@@ -43,9 +44,10 @@ class MessageHandler(Generic[T]):
 
     # --- Main path ---
     def _handle_main_message(self, message: Dict[str, Any]) -> None:
-        obj = self.model_cls.model_validate(message)
+        obj = self.model_in.model_validate(message)
+        res: V = Optional[V]
         try:
-            self._process(obj)
+            res  = self._process(obj)
         except Exception as e:
             now = datetime.now(timezone.utc)
             dlq = DLQMessage(
@@ -64,16 +66,15 @@ class MessageHandler(Generic[T]):
             return
 
         # success → next hop
-        self._produce(self.topic_out, obj.model_dump())
+        self._produce(self.topic_out, res.model_dump())
 
     # --- DLQ replay path ---
     def _handle_dlq_message(self, message: Dict[str, Any]) -> None:
         dlq = DLQMessage.model_validate(message)
         next_hop = getattr(dlq, "intended_next_topic", None) or self.topic_out
-
         # If payload no longer matches schema T → park
         try:
-            obj = self.model_cls.model_validate(dlq.payload)
+            obj = self.model_in.model_validate(dlq.payload)
         except Exception as e:
             dlq.last_error = str(e)
             dlq.error_code = type(e).__name__
@@ -82,8 +83,9 @@ class MessageHandler(Generic[T]):
             self._produce(self.park_topic, dlq.model_dump())
             return
 
+        res: V = Optional[V]
         try:
-            self._process(obj)
+            res = self._process(obj)
         except Exception as e:
             dlq.attempts += 1
             dlq.last_attempt_ts = datetime.now(timezone.utc)
@@ -100,10 +102,10 @@ class MessageHandler(Generic[T]):
             return
 
         # replay success → intended next hop
-        self._produce(next_hop, obj.model_dump())
+        self._produce(next_hop, res.model_dump())
 
     # --- Delegation ---
-    def _process(self, obj: T) -> bool:
+    def _process(self, obj: T) -> V:
         self.logger.info("[INFO] Passing message to worker…")
         return self.worker.process(obj)
 

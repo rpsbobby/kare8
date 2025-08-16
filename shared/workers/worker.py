@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-T = TypeVar("T")
+from pydantic import BaseModel
 
-class Worker(ABC, Generic[T]):
+T = TypeVar("T", bound=BaseModel)
+V = TypeVar("V", bound=BaseModel)
+
+class Worker(ABC, Generic[T, V]):
     @abstractmethod
-    def process(self, message: T) -> bool:
+    def process(self, message: T) -> V:
         """Process a message of type T"""
         pass
