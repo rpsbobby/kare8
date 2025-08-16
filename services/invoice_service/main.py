@@ -1,8 +1,5 @@
 import os
 import time
-from multiprocessing.pool import worker
-
-from pydantic import ValidationError
 
 from entities.order import Order
 from handlers.message_handler import MessageHandler
