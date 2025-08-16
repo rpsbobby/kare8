@@ -5,12 +5,13 @@ from entities.order import Order
 from handlers.message_handler import MessageHandler
 from messaging.workers.order_worker import OrderWorker
 from utils.logger import get_logger
+from topics.topics import ORDERS, GENERATE_INVOICE, ORDERS_DLQ, ORDERS_PARK
 from messaging.factories.kafka_factory import get_kafka_consumer, get_kafka_producer
 
-TOPIC_IN = os.getenv("TOPIC", "orders")
-DLQ_TOPIC = os.getenv("DLQ_TOPIC", f"{TOPIC_IN}.dlq")
-PARK_TOPIC = os.getenv("PARK_TOPIC", f"{TOPIC_IN}.park")
-TOPIC_OUT = os.getenv("TOPIC_OUT", "invoice")
+TOPIC_IN = os.getenv("TOPIC", ORDERS)
+DLQ_TOPIC = os.getenv("DLQ_TOPIC", ORDERS_DLQ)
+PARK_TOPIC = os.getenv("PARK_TOPIC", ORDERS_PARK)
+TOPIC_OUT = os.getenv("TOPIC_OUT", GENERATE_INVOICE)
 
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
 
