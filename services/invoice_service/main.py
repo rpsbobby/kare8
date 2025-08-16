@@ -31,9 +31,7 @@ if __name__ == "__main__":
     logger.info(f"Connected to Kafka. Subscribing to '{TOPIC_IN}'...")
 
     kafka_consumer.consume(TOPIC_IN, message_handler.handle_message)
-
-    kafka_consumer.consume(GENERATE_INVOICE, )
-    logger.info(f"Subscribed to '{GENERATE_INVOICE}' topic. Waiting for messages...")
+    logger.info(f"Subscribed to '{TOPIC_IN}' topic. Waiting for messages...")
 
     while True:
         time.sleep(1)
