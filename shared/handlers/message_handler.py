@@ -1,4 +1,3 @@
-# messaging/handlers/message_handler.py
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Type, Generic, TypeVar

@@ -4,5 +4,7 @@ curl -X POST http://localhost:8000/order -H "Content-Type: application/json" -d 
 docker build -f shared/Dockerfile -t kare8-shared:latest ./shared
 
 # compose
+
 docker compose down -v # remove all containers and volumes
+
 docker compose up --build # rebuild all container
