@@ -11,6 +11,7 @@ class DLQMessage(BaseModel):
     version: int = 1
     origin_topic: str
     current_topic: str
+    intended_next_topic: str
     trace_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     attempts: int = 0
     first_seen_ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
