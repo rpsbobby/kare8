@@ -17,7 +17,8 @@ if __name__ == "__main__":
 
     kafka_consumer = get_kafka_consumer()
     kafka_producer = get_kafka_producer()
-    message_handler = MessageHandler(kafka_consumer=kafka_consumer, topic=TOPIC, dlq_topic=DLQ_TOPIC, park_topic=PARK_TOPIC, logger=logger, max_attempts=MAX_ATTEMPTS)
+    message_handler = MessageHandler(kafka_producer=kafka_producer, topic=TOPIC, dlq_topic=DLQ_TOPIC, park_topic=PARK_TOPIC, logger=logger,
+                                     max_attempts=MAX_ATTEMPTS)
 
     logger.info(f"Connected to Kafka. Subscribing to '{TOPIC}'...")
 
