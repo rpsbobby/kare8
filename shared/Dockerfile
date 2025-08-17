@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 && cp -r entities /opt/pythonlibs \
 && cp -r workers /opt/pythonlibs \
 && cp -r handlers /opt/pythonlibs \
+&& cp -r o11y /opt/pythonlibs \
 && chmod -R a+r /opt/pythonlibs
 
 ENV PYTHONPATH="/opt/pythonlibs"
