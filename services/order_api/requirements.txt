@@ -2,4 +2,3 @@ fastapi
 pydantic
 confluent-kafka
 uvicorn
-prometheus_client

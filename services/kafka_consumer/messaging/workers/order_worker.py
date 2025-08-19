@@ -8,7 +8,7 @@ class OrderWorker(Worker[Order, Order]):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, message: Order) -> bool:
+    def process(self, message: Order) -> Order:
         self.logger.info(f"[INFO] Processing order: {message}")
         # do real work here
         return message
