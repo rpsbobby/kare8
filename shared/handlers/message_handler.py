@@ -15,8 +15,16 @@ V=TypeVar("V", bound=BaseModel)
 
 class MessageHandler(Generic[T, V]):
     def __init__(
-            self, kafka_producer: KafkaProducerInterface, worker: Worker[T, V], model_in: Type[T], topic_in: str, topic_out: str, dlq_topic: str,
-            park_topic: str, logger: Logger, max_attempts: int = 3, ):
+            self,
+            kafka_producer: KafkaProducerInterface,
+            worker: Worker[T, V],
+            model_in: Type[T],
+            topic_in: str,
+            topic_out: str,
+            dlq_topic: str,
+            park_topic: str,
+            logger: Logger,
+            max_attempts: int = 3, ):
         self.producer=kafka_producer
         self.worker=worker
         self.model_in=model_in
@@ -46,8 +54,16 @@ class MessageHandler(Generic[T, V]):
         except Exception as e:
             now=datetime.now(timezone.utc)
             trace_id=(headers or {}).get("x-trace-id") or str(uuid.uuid4())
-            dlq=DLQMessage(payload=obj.model_dump(), origin_topic=self.topic_in, current_topic=self.dlq_topic, attempts=1, trace_id=trace_id, first_seen_ts=now,
-                           last_attempt_ts=now, last_error=str(e), error_code=type(e).__name__, intended_next_topic=self.topic_out, )
+            dlq=DLQMessage(payload=obj.model_dump(),
+                           origin_topic=self.topic_in,
+                           current_topic=self.dlq_topic,
+                           attempts=1,
+                           trace_id=trace_id,
+                           first_seen_ts=now,
+                           last_attempt_ts=now,
+                           last_error=str(e),
+                           error_code=type(e).__name__,
+                           intended_next_topic=self.topic_out, )
             dlq_headers=self._merge_headers(headers, {
                 "x-trace-id": trace_id,
                 "x-origin-topic": self.topic_in,
@@ -59,10 +75,7 @@ class MessageHandler(Generic[T, V]):
             return
 
         # success → next hop
-        out_headers=self._merge_headers(headers, {
-            "x-trace-id": (headers or {}).get("x-trace-id") or str(uuid.uuid4()), "x-origin-topic": self.topic_in, "x-produced-by": "kare8-service",
-            }, )
-        self._produce(self.topic_out, res.model_dump(), key=key, headers=out_headers)
+        self._on_success(res, key, headers=headers, next_hop=self.topic_out)
 
     # --- DLQ replay path ---
     def _handle_dlq_message(self, message: Dict[str, Any], key: Optional[bytes], headers: Optional[dict[str, str]]) -> None:
@@ -105,10 +118,7 @@ class MessageHandler(Generic[T, V]):
             return
 
         # replay success → intended next hop
-        success_headers=self._merge_headers(headers, {
-            "x-trace-id": dlq.trace_id, "x-attempts": str(dlq.attempts),
-            }, )
-        self._produce(next_hop, res.model_dump(), key=key, headers=success_headers)
+        self._on_success(res, key, headers=headers, next_hop=next_hop, dlq=dlq)
 
     # --- Delegation ---
     def _process(self, obj: T) -> V:
@@ -124,3 +134,20 @@ class MessageHandler(Generic[T, V]):
         h=dict(base or {})
         h.update({k: str(v) for k, v in extra.items()})
         return h
+
+    def _on_success(self, res, key, headers=None, next_hop=None, dlq=None):
+        base_headers=headers or {}
+        trace_id=(dlq.trace_id if dlq else base_headers.get("x-trace-id") or str(uuid.uuid4()))
+
+        enriched_headers=self._merge_headers(base_headers, {
+            "x-trace-id": trace_id, "x-origin-topic": self.topic_in, "x-produced-by": "kare8-service",
+            }, )
+
+        # add attempts if coming from DLQ
+        if dlq:
+            enriched_headers["x-attempts"]=str(dlq.attempts)
+        # only produce if we have a next hop (not last step)
+        if next_hop:
+            self._produce(next_hop, res.model_dump(), key=key, headers=enriched_headers)
+        else:
+            self.logger.info(f"Completed processing trace_id={trace_id} (no next topic)")  # optional: metrics or emit a 'completed' event
