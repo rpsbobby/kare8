@@ -8,16 +8,13 @@ from messaging.workers.email_worker import EmailWorker
 from utils.logger import get_logger
 from topics.topics import SEND_EMAIL, SEND_EMAIL_DLQ, SEND_EMAIL_PARK
 
-logger = get_logger("email_service")
-TOPIC_IN = os.getenv("TOPIC", SEND_EMAIL)
-DLQ_TOPIC = os.getenv("DLQ_TOPIC", SEND_EMAIL_DLQ)
-PARK_TOPIC = os.getenv("PARK_TOPIC", SEND_EMAIL_PARK)
-TOPIC_OUT = os.getenv("TOPIC_OUT", None)
+logger=get_logger("email_service")
+TOPIC_IN=os.getenv("TOPIC", SEND_EMAIL)
+DLQ_TOPIC=os.getenv("DLQ_TOPIC", SEND_EMAIL_DLQ)
+PARK_TOPIC=os.getenv("PARK_TOPIC", SEND_EMAIL_PARK)
+TOPIC_OUT=os.getenv("TOPIC_OUT", None)
 
-MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
-
-
-
+MAX_ATTEMPTS=int(os.getenv("MAX_ATTEMPTS", "3"))
 
 if __name__ == "__main__":
     logger.info("📨 Starting Email Service... Trying to connect to Kafka...")
@@ -33,8 +30,7 @@ if __name__ == "__main__":
                                    park_topic=PARK_TOPIC,
                                    logger=logger,
                                    max_attempts=MAX_ATTEMPTS)
-    handler = MessageHandler(kafka_consumer)
-    kafka_consumer.consume(SEND_EMAIL, handler.handle_message)
+    kafka_consumer.consume(SEND_EMAIL, message_handler.handle_message)
     logger.info("✅ Connected to Kafka. Subscribing to 'send-email' topic...")
 
     while True:

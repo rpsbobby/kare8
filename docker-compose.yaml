@@ -37,6 +37,7 @@ services:
     pull_policy: always
     ports:
       - "8000:8000"
+      - "9000:9000"
     depends_on:
       kafka:
         condition: service_healthy
