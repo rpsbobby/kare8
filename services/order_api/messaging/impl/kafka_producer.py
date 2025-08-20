@@ -8,7 +8,7 @@ from confluent_kafka import Producer
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from utils.logger import get_logger
 from utils.retry import retry_with_backoff
-from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total
+from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, message_accepted_total
 
 logger=get_logger("kafka_consumer")
 
@@ -28,7 +28,7 @@ class KafkaProducer(KafkaProducerInterface):
             self._init_producer()
         logger.debug(f"📥 Enqueued message to topic '{topic}': {message}")
         self._queue.put((topic, message, key, headers))
-        # gauge current queue depth
+        messages_accepted_total.labels(topic=topic).inc()
         queue_depth.labels(topic=topic).set(self._queue.qsize())
 
     def _init_producer(self):
@@ -54,7 +54,10 @@ class KafkaProducer(KafkaProducerInterface):
         while self._running:
             try:
                 topic, message, key, headers=self._queue.get(timeout=1)
-                self._safe_produce(topic, message, key, headers)
+                try:
+                    self._safe_produce(topic, message, key, headers)
+                finally:
+                    queue_depth.labels(topic=topic).set(self._queue.qsize())
             except Empty:
                 continue
 
