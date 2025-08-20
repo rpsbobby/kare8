@@ -8,7 +8,7 @@ from confluent_kafka import Producer
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from utils.logger import get_logger
 from utils.retry import retry_with_backoff
-from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, message_accepted_total
+from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, messages_accepted_total
 
 logger=get_logger("kafka_consumer")
 
@@ -76,7 +76,7 @@ class KafkaProducer(KafkaProducerInterface):
             self._producer.produce(topic, key=key, value=payload, headers=h, callback=self._delivery)
             self._producer.poll(0)
             messages_processed_total.labels(topic=topic, status="produced").inc()
-        except Exception as e:
+        except Exception:
             messages_processed_total.labels(topic=topic, status="error").inc()
             raise
         finally:
