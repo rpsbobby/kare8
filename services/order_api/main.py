@@ -2,12 +2,14 @@ import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import JSONResponse
 
 from entities.order import Order
 from handlers.message_handler import MessageHandler
 from messaging.factories.kafka_factory import get_kafka_producer
-from messaging.workers.order_worker import ApiWorker
+from messaging.workers.api_pre_worker import ApiPreWorker
+from messaging.workers.api_worker import ApiWorker
 from utils.logger import get_logger
 from topics.topics import ORDERS, ORDERS_DLQ, ORDERS_PARK, GENERATE_INVOICE
 from o11y.metrics import (start_metrics_server, messages_processed_total, processing_latency_seconds, queue_depth)
@@ -22,6 +24,7 @@ MAX_ATTEMPTS=int(os.getenv("MAX_ATTEMPTS", "3"))
 
 kafka_producer=get_kafka_producer()
 worker=ApiWorker(logger=logger)
+pre_worker=ApiPreWorker(logger=logger)
 message_handler=MessageHandler(kafka_producer=kafka_producer,
                                worker=worker,
                                model_in=Order,
@@ -37,10 +40,8 @@ message_handler=MessageHandler(kafka_producer=kafka_producer,
 async def lifespan(app: FastAPI):
     # Startup
     start_metrics_server(PROMETHEUS_SERVER)  # separate port for Prometheus scraping
-    logger.info(f"✅ Metrics server started on :{PROMETHEUS_SERVER}")
-
+    logger.info(f"[INFO]✅ Metrics server started on :{PROMETHEUS_SERVER}")
     yield  # 👈 FastAPI will run the app while we are in this context
-
     # Shutdown (if needed)
     logger.info("🛑 Shutting down order_api service")
 
@@ -48,26 +49,25 @@ async def lifespan(app: FastAPI):
 app=FastAPI(lifespan=lifespan)
 
 
-#
 @app.post("/order")
 def create_order(order: Order):
     logger.info(f"Received order request {order.order_id}")
 
-    start=time.time()
+    # Pre-validation (reject bad input before pipeline)
     try:
-        kafka_producer.produce(ORDERS, order.model_dump())
-
-        # update queue depth gauge
-        queue_depth.labels(topic=ORDERS).set(kafka_producer.len())
-
-        # success counter
-        messages_processed_total.labels(topic=ORDERS, status="success").inc()
+        pre_worker.process(order)
     except Exception as e:
-        logger.error(f"❌ Failed to publish order {order.order_id}: {e}")
-        messages_processed_total.labels(topic=ORDERS, status="error").inc()
-        raise
-    finally:
-        duration=time.time() - start
-        processing_latency_seconds.labels(topic=ORDERS).observe(duration)
+        logger.warning(f"❌ Rejected order {order.order_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid order: {str(e)}")
 
-    return {"status": "received", "order": order}
+    try:
+        # Hand off to pipeline (fire-and-forget)
+        message_handler.handle_message(order.model_dump())
+    except Exception as e:
+        logger.error(f"🔥 Pipeline failure for order {order.order_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Order could not be enqueued for processing")
+
+    # Return 202 Accepted to indicate async processing
+    return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content={
+        "status": "received", "trace_id": "TODO: extract from handler headers", "order": order.model_dump()
+        })
