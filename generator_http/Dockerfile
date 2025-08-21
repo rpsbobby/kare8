@@ -5,6 +5,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY generator_http.py .
+COPY main.py .
 
 CMD ["python", "generator_http.py"]
