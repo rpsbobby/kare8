@@ -3,22 +3,25 @@ import time
 
 from entities.order import Order
 from handlers.message_handler import MessageHandler
-from messaging.workers.order_worker import OrderWorker
-from utils.logger import get_logger
-from topics.topics import ORDERS, GENERATE_INVOICE, ORDERS_DLQ, ORDERS_PARK
 from messaging.factories.kafka_factory import get_kafka_consumer, get_kafka_producer
+from messaging.workers.order_worker import OrderWorker
+from o11y.metrics import start_metrics_server
+from topics.topics import ORDERS, GENERATE_INVOICE, ORDERS_DLQ, ORDERS_PARK
+from utils.logger import get_logger
 
+PROMETHEUS_SERVER=int(os.getenv("PROMETHEUS_SERVER", "9000"))
 TOPIC_IN = os.getenv("TOPIC", ORDERS)
 DLQ_TOPIC = os.getenv("DLQ_TOPIC", ORDERS_DLQ)
 PARK_TOPIC = os.getenv("PARK_TOPIC", ORDERS_PARK)
 TOPIC_OUT = os.getenv("TOPIC_OUT", GENERATE_INVOICE)
-
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
 
 logger = get_logger("kafka_consumer")
 
 if __name__ == "__main__":
     logger.info("Starting Kafka Consumer Service...")
+    start_metrics_server(PROMETHEUS_SERVER)  # separate port for Prometheus scraping
+    logger.info(f"[INFO]✅ Metrics server started on :{PROMETHEUS_SERVER}")
 
     kafka_consumer = get_kafka_consumer()
     kafka_producer = get_kafka_producer()

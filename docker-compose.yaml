@@ -5,6 +5,8 @@ services:
   kafka-consumer:
     image: ghcr.io/rpsbobby/kare8-kafka_consumer:${IMAGE_TAG:-develop}
     pull_policy: always
+    ports:
+      - "9000:9000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -15,6 +17,8 @@ services:
   invoice-service:
     image: ghcr.io/rpsbobby/kare8-invoice_service:${IMAGE_TAG:-develop}
     pull_policy: always
+    ports:
+      - "9000:9000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -25,6 +29,8 @@ services:
   email-service:
     image: ghcr.io/rpsbobby/kare8-email_service:${IMAGE_TAG:-develop}
     pull_policy: always
+    ports:
+      - "9000:9000"
     depends_on:
       kafka:
         condition: service_healthy

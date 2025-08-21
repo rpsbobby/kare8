@@ -5,7 +5,9 @@ from queue import Queue, Empty
 from typing import Dict, Tuple, Optional
 
 from confluent_kafka import Producer
+
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
+from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, messages_accepted_total
 from utils.logger import get_logger
 from utils.retry import retry_with_backoff
 
@@ -27,6 +29,8 @@ class KafkaProducer(KafkaProducerInterface):
             self._init_producer()
         logger.debug(f"📥 Enqueued message to topic '{topic}': {message}")
         self._queue.put((topic, message, key, headers))
+        messages_accepted_total.labels(topic=topic).inc()
+        queue_depth.labels(topic=topic).set(self._queue.qsize())
 
     def _init_producer(self):
         cfg = {"bootstrap.servers": self.bootstrap_servers, "enable.idempotence": True, "acks": "all", "compression.type": "lz4",
@@ -55,12 +59,6 @@ class KafkaProducer(KafkaProducerInterface):
             except Empty:
                 continue
 
-    @retry_with_backoff(logger=logger)
-    def _safe_produce(self, topic: str, message: Dict):
-        logger.info(f"📤 Publishing to topic '{topic}': {message} from _self_produce")
-        self._producer.produce(topic, value=json.dumps(message))
-        self._producer.flush()  # You might want to batch or debounce this in future
-
     def _delivery(self, err, msg):
         if err:
             logger.warning(f"❌ delivery failed: {err} (topic={msg.topic()}, key={msg.key()})")
@@ -69,11 +67,19 @@ class KafkaProducer(KafkaProducerInterface):
 
     @retry_with_backoff(logger=logger)
     def _safe_produce(self, topic: str, message: Dict, key: bytes | None, headers: Dict[str, str] | None):
-        logger.info(f"📤 Publishing to topic '{topic}': {message} from _self_produce")
-        payload = json.dumps(message, separators=(",", ":"), default=str)
-        h = [(k, v.encode()) for k, v in (headers or {}).items()]
-        self._producer.produce(topic, key=key, value=payload, headers=h, callback=self._delivery)
-        self._producer.poll(0)  # serve callbacks (no per-message flush!)
+        start=time.time()
+        try:
+            payload=json.dumps(message, separators=(",", ":"), default=str)
+            h=[(k, v.encode()) for k, v in (headers or {}).items()]
+            self._producer.produce(topic, key=key, value=payload, headers=h, callback=self._delivery)
+            self._producer.poll(0)
+            messages_processed_total.labels(topic=topic, status="produced").inc()
+        except Exception:
+            messages_processed_total.labels(topic=topic, status="error").inc()
+            raise
+        finally:
+            duration=time.time() - start
+            processing_latency_seconds.labels(topic=topic).observe(duration)
 
     def stop(self):
         self._running = False
@@ -84,7 +90,7 @@ class KafkaProducer(KafkaProducerInterface):
             if remaining:
                 logger.info(f"⏳ draining {remaining} queued messages...")
                 while not self._queue.empty():
-                    topic, message = self._queue.get_nowait()
-                    self._safe_produce(topic, message)
+                    topic, message, key, headers=self._queue.get_nowait()
+                    self._safe_produce(topic, message, key, headers)
             self._producer.flush(10)  # seconds
         logger.info("🛑 Kafka producer stopped cleanly")

@@ -5,10 +5,11 @@ from queue import Queue, Empty
 from typing import Dict, Tuple, Optional
 
 from confluent_kafka import Producer
+
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
+from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, messages_accepted_total
 from utils.logger import get_logger
 from utils.retry import retry_with_backoff
-from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, messages_accepted_total
 
 logger=get_logger("kafka_consumer")
 
@@ -92,7 +93,7 @@ class KafkaProducer(KafkaProducerInterface):
             if remaining:
                 logger.info(f"⏳ draining {remaining} queued messages...")
                 while not self._queue.empty():
-                    topic, message=self._queue.get_nowait()
-                    self._safe_produce(topic, message)
+                    topic, message, key, headers=self._queue.get_nowait()
+                    self._safe_produce(topic, message, key, headers)
             self._producer.flush(10)  # seconds
         logger.info("🛑 Kafka producer stopped cleanly")

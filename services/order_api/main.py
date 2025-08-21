@@ -1,5 +1,4 @@
 import os
-import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status
@@ -10,12 +9,12 @@ from handlers.message_handler import MessageHandler
 from messaging.factories.kafka_factory import get_kafka_producer
 from messaging.workers.api_pre_worker import ApiPreWorker
 from messaging.workers.api_worker import ApiWorker
+from o11y.metrics import start_metrics_server
+from topics.topics import ORDERS, ORDERS_DLQ, ORDERS_PARK
 from utils.logger import get_logger
-from topics.topics import ORDERS, ORDERS_DLQ, ORDERS_PARK, GENERATE_INVOICE
-from o11y.metrics import (start_metrics_server, messages_processed_total, processing_latency_seconds, queue_depth)
 
 logger=get_logger("order_api")
-PROMETHEUS_SERVER=int(os.getenv("PROMETHEUS_SERVER", "9000"))  # Port for Prometheus metrics
+PROMETHEUS_SERVER=int(os.getenv("PROMETHEUS_SERVER", "9000"))
 TOPIC_IN=os.getenv("TOPIC", "NONE")
 DLQ_TOPIC=os.getenv("DLQ_TOPIC", ORDERS_DLQ)
 PARK_TOPIC=os.getenv("PARK_TOPIC", ORDERS_PARK)
