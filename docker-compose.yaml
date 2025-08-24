@@ -17,8 +17,6 @@ services:
   invoice-service:
     image: ghcr.io/rpsbobby/kare8-invoice_service:${IMAGE_TAG:-develop}
     pull_policy: always
-    ports:
-      - "9200:9000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -29,8 +27,6 @@ services:
   email-service:
     image: ghcr.io/rpsbobby/kare8-email_service:${IMAGE_TAG:-develop}
     pull_policy: always
-    ports:
-      - "9100:9000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -43,7 +39,6 @@ services:
     pull_policy: always
     ports:
       - "8000:8000"
-      - "9000:9000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -90,5 +85,25 @@ services:
       retries: 5
     depends_on:
       - zookeeper
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana-storage:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"  # expose Prometheus UI to host (optional)
+
+volumes:
+    grafana-data:
 
 
