@@ -6,9 +6,9 @@ from fastapi.responses import JSONResponse
 
 from entities.order import Order
 from handlers.message_handler import MessageHandler
-from messaging.factories.kafka_factory import get_kafka_producer
 from messaging.workers.api_pre_worker import ApiPreWorker
 from messaging.workers.api_worker import ApiWorker
+from messaging_impl.kafka_factory import get_kafka_producer
 from o11y.metrics import start_metrics_server
 from topics.topics import ORDERS, ORDERS_DLQ, ORDERS_PARK
 from utils.logger import get_logger
@@ -20,8 +20,10 @@ DLQ_TOPIC=os.getenv("DLQ_TOPIC", ORDERS_DLQ)
 PARK_TOPIC=os.getenv("PARK_TOPIC", ORDERS_PARK)
 TOPIC_OUT=os.getenv("TOPIC_OUT", ORDERS)
 MAX_ATTEMPTS=int(os.getenv("MAX_ATTEMPTS", "3"))
+kafka_host=os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
-kafka_producer=get_kafka_producer()
+kafka_producer=get_kafka_producer(bootstrap_servers=kafka_host, logger=logger)
+
 worker=ApiWorker(logger=logger)
 pre_worker=ApiPreWorker(logger=logger)
 message_handler=MessageHandler(kafka_producer=kafka_producer,

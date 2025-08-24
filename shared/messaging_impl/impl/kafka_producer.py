@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+from logging import Logger
 from queue import Queue, Empty
 from typing import Dict, Tuple, Optional
 
@@ -8,45 +9,43 @@ from confluent_kafka import Producer
 
 from messaging_interfaces.kafka.kafka_producer_interface import KafkaProducerInterface
 from o11y.metrics import queue_depth, processing_latency_seconds, messages_processed_total, messages_accepted_total
-from utils.logger import get_logger
 from utils.retry import retry_with_backoff
-
-logger = get_logger("kafka_consumer")
 
 
 class KafkaProducer(KafkaProducerInterface):
-    def __init__(self, bootstrap_servers: str):
-        self.bootstrap_servers = bootstrap_servers
-        self._queue:  Queue[Tuple[str, Dict, Optional[bytes], Optional[Dict[str, str]]]] = Queue(maxsize=10000)
-        self._producer: Producer = None
-        self._running = True
-        self._worker_thread = threading.Thread(target=self._run_loop, daemon=True)
+    def __init__(self, bootstrap_servers: str, logger: Logger):
+        self.bootstrap_servers=bootstrap_servers
+        self._queue: Queue[Tuple[str, Dict, Optional[bytes], Optional[Dict[str, str]]]]=Queue(maxsize=10000)
+        self._producer: Producer=None
+        self._running=True
+        self._worker_thread=threading.Thread(target=self._run_loop, daemon=True)
         self._worker_thread.start()
-        logger.info("🧵 Kafka producer background thread started")
+        self.logger=logger
+        self.logger.info("🧵 Kafka producer background thread started")
 
     def produce(self, topic: str, message: Dict, key: bytes | None = None, headers: Dict[str, str] | None = None):
         if self._producer is None:
             self._init_producer()
-        logger.debug(f"📥 Enqueued message to topic '{topic}': {message}")
+        self.logger.debug(f"📥 Enqueued message to topic '{topic}': {message}")
         self._queue.put((topic, message, key, headers))
         messages_accepted_total.labels(topic=topic).inc()
         queue_depth.labels(topic=topic).set(self._queue.qsize())
 
     def _init_producer(self):
-        cfg = {"bootstrap.servers": self.bootstrap_servers, "enable.idempotence": True, "acks": "all", "compression.type": "lz4",
-            # or zstd if available
+        cfg={
+            "bootstrap.servers": self.bootstrap_servers, "enable.idempotence": True, "acks": "all", "compression.type": "lz4",  # or zstd if available
             "linger.ms": 5, "batch.num.messages": 10000, "delivery.timeout.ms": 120000,  # total send time budget
             "retries": 2147483647,  # librdkafka bounds by delivery.timeout.ms
             "max.in.flight.requests.per.connection": 5,  # keep <=5 when idempotent
-        }
+            }
         for i in range(10):
             try:
-                logger.info(f"Trying to connect to Kafka at {self.bootstrap_servers} (attempt {i + 1}/10)")
-                self._producer = Producer(cfg)
-                logger.info("✅ Kafka producer ready")
+                self.logger.info(f"Trying to connect to Kafka at {self.bootstrap_servers} (attempt {i + 1}/10)")
+                self._producer=Producer(cfg)
+                self.logger.info("✅ Kafka producer ready")
                 break
             except Exception as e:
-                logger.warning(f"❌ Kafka not ready yet: {e}")
+                self.logger.warning(f"❌ Kafka not ready yet: {e}")
                 time.sleep(3)
         else:
             raise ConnectionError("Kafka failed to connect after 10 retries")
@@ -54,18 +53,18 @@ class KafkaProducer(KafkaProducerInterface):
     def _run_loop(self):
         while self._running:
             try:
-                topic, message, key, headers = self._queue.get(timeout=1)
+                topic, message, key, headers=self._queue.get(timeout=1)
                 self._safe_produce(topic, message, key, headers)
             except Empty:
                 continue
 
     def _delivery(self, err, msg):
         if err:
-            logger.warning(f"❌ delivery failed: {err} (topic={msg.topic()}, key={msg.key()})")
+            self.logger.warning(f"❌ delivery failed: {err} (topic={msg.topic()}, key={msg.key()})")
         else:
-            logger.debug(f"✅ delivered to {msg.topic()}[{msg.partition()}]@{msg.offset()}")
+            self.logger.debug(f"✅ delivered to {msg.topic()}[{msg.partition()}]@{msg.offset()}")
 
-    @retry_with_backoff(logger=logger)
+    @retry_with_backoff()
     def _safe_produce(self, topic: str, message: Dict, key: bytes | None, headers: Dict[str, str] | None):
         start=time.time()
         try:
@@ -82,15 +81,15 @@ class KafkaProducer(KafkaProducerInterface):
             processing_latency_seconds.labels(topic=topic).observe(duration)
 
     def stop(self):
-        self._running = False
+        self._running=False
         self._worker_thread.join()
         if self._producer:
             # drain remaining events
-            remaining = self._queue.qsize()
+            remaining=self._queue.qsize()
             if remaining:
-                logger.info(f"⏳ draining {remaining} queued messages...")
+                self.logger.info(f"⏳ draining {remaining} queued messages...")
                 while not self._queue.empty():
                     topic, message, key, headers=self._queue.get_nowait()
                     self._safe_produce(topic, message, key, headers)
             self._producer.flush(10)  # seconds
-        logger.info("🛑 Kafka producer stopped cleanly")
+        self.logger.info("🛑 Kafka producer stopped cleanly")

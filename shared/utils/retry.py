@@ -1,27 +1,30 @@
 import asyncio
-import time
 import functools
 import logging
 import random
+import time
 
-def retry_with_backoff(max_attempts=5, base_delay=1, exceptions=(Exception,), logger: logging.Logger = None):
+
+def retry_with_backoff(max_attempts=5, base_delay=1, exceptions=(Exception,)):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            self=args[0] if args else None
+            _logger=getattr(self, "logger", None)
+
             for attempt in range(max_attempts):
                 try:
                     return func(*args, **kwargs)
                 except exceptions as e:
                     delay = base_delay * (2 ** attempt) + random.uniform(0, 0.5)
-                    if logger:
-                        logger.warning(f"Retry {attempt + 1}/{max_attempts} failed: {e}. Retrying in {delay}s...")
+                    if _logger:
+                        _logger.warning(f"Retry {attempt + 1}/{max_attempts} failed: {e}. Retrying in {delay:.2f}s...")
                     time.sleep(delay)
-            if logger:
-                logger.error(f"Operation failed after {max_attempts} attempts.")
+
+            if _logger:
+                _logger.error(f"Operation failed after {max_attempts} attempts.")
             raise RuntimeError(f"Operation failed after {max_attempts} attempts.")
-
         return wrapper
-
     return decorator
 
 
