@@ -1,0 +1,59 @@
+{
+  "id": null,
+  "title": "Kare8 Service Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Processed Messages",
+      "targets": [
+        {
+          "expr": "sum(increase(messages_processed_total[1m])) by (topic, status)"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Failed Messages",
+      "targets": [
+        {
+          "expr": "sum(increase(messages_failed_total[1m])) by (topic, error_type)"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue Depth",
+      "targets": [
+        {
+          "expr": "queue_depth"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Processing Latency (p50/p90/p99)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(processing_latency_seconds_bucket[1m])) by (le, topic))",
+          "legendFormat": "p50 ({{topic}})"
+        },
+        {
+          "expr": "histogram_quantile(0.9, sum(rate(processing_latency_seconds_bucket[1m])) by (le, topic))",
+          "legendFormat": "p90 ({{topic}})"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(processing_latency_seconds_bucket[1m])) by (le, topic))",
+          "legendFormat": "p99 ({{topic}})"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 10 }
+    }
+  ]
+}
