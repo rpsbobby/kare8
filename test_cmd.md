@@ -8,3 +8,8 @@ docker build -f shared/Dockerfile -t kare8-shared:latest ./shared
 docker compose down -v # remove all containers and volumes
 
 docker compose up --build # rebuild all container
+
+# for k8s
+
+ - spammer : docker run -d --name spammer -e API_URL=http://host.docker.internal:30080/order -e GENERATOR_INTERVAL=2 ghcr.io/rpsbobby/kare8-spammer:develop
+ - 

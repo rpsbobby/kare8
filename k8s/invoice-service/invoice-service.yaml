@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoice-service
+  labels:
+    app: invoice-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: invoice-service
+  template:
+    metadata:
+      labels:
+        app: invoice-service
+    spec:
+      containers:
+      - name: invoice-service
+        image: ghcr.io/rpsbobby/kare8-invoice_service:develop
+        ports:
+          - name: metrics     # 👈 prometheus metrics port
+            containerPort: 9000
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: PYTHONPATH
+          value: "/app:/opt/pythonlibs"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoice-service
+  labels:
+    app: invoice-service
+spec:
+  selector:
+    app: invoice-service
+  ports:
+    - name: metrics     # 👈 prometheus metrics port
+      port: 9000
+      targetPort: 9000
+---

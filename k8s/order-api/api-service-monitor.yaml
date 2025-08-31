@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-service-monitor
+  namespace: monitoring        # 👈 goes into the monitoring namespace
+  labels:
+    release: monitoring        # 👈 must match kube-prometheus-stack Helm release
+spec:
+  selector:
+    matchLabels:
+      app: order-api
+  namespaceSelector:
+    matchNames:
+      - default                # 👈 where your app lives
+  endpoints:
+    - port: metrics            # 👈 matches the Service port name
+      path: /metrics
+      interval: 5s

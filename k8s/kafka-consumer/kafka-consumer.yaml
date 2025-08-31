@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  labels:
+    app: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: kafka-consumer
+        image: ghcr.io/rpsbobby/kare8-kafka_consumer:develop
+        ports:
+          - name: metrics
+            containerPort: 9000
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: PYTHONPATH
+          value: "/app:/opt/pythonlibs"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-consumer
+  labels:
+    app: kafka-consumer
+spec:
+  selector:
+    app: kafka-consumer
+  ports:
+    - name: metrics
+      port: 9000
+      targetPort: 9000
+---
