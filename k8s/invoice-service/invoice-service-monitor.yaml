@@ -1,18 +1,11 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: invoice-service-monitor
-  namespace: monitoring        # 👈 goes into the monitoring namespace
-  labels:
-    release: monitoring        # 👈 must match kube-prometheus-stack Helm release
+  name: invoice-monitor
 spec:
   selector:
     matchLabels:
       app: invoice-service
-  namespaceSelector:
-    matchNames:
-      - default                # 👈 where your app lives
   endpoints:
-    - port: metrics            # 👈 matches the Service port name
-      path: /metrics
+    - port: metrics
       interval: 5s

@@ -1,40 +1,7 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: order-api
-  labels:
-    app: order-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: order-api
-  template:
-    metadata:
-      labels:
-        app: order-api
-    spec:
-      containers:
-      - name: order-api
-        image: ghcr.io/rpsbobby/kare8-order_api:develop
-        ports:
-          - name: http
-            protocol: TCP
-            containerPort: 8000
-          - name: metrics
-            containerPort: 9000
-        env:
-        - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka:9092"
-        - name: PYTHONPATH
-          value: "/app:/opt/pythonlibs"
----
 apiVersion: v1
 kind: Service
 metadata:
   name: order-api
-  labels:
-    app: order-api
 spec:
   type: NodePort
   selector:
@@ -47,4 +14,24 @@ spec:
     - name: metrics
       port: 9000
       targetPort: 9000
+      nodePort: 30090
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-api
+spec:
+  selector:
+    matchLabels:
+      app: order-api
+  template:
+    metadata:
+      labels:
+        app: order-api
+    spec:
+      containers:
+        - name: order-api
+          image: ghcr.io/rpsbobby/kare8-order_api:${IMAGE_TAG:-develop}
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: host.docker.internal:29092
