@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: email-monitor
+  name: email-service-monitor
 spec:
   selector:
     matchLabels:

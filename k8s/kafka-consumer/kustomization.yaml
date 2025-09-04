@@ -1,0 +1,6 @@
+resources:
+  - kafka-consumer-monitor.yaml
+  - kafka-consumer.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: kare8

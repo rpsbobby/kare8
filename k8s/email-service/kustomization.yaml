@@ -1,0 +1,6 @@
+resources:
+  - email-service-monitor.yaml
+  - email-service.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: kare8

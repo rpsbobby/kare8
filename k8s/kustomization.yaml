@@ -1,0 +1,11 @@
+resources:
+  - order-api
+  - kafka-consumer
+  - invoice-service
+  - email-service
+
+namespace: kare8
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: kare8

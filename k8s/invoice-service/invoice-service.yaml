@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: invoice-service
-          image: ghcr.io/rpsbobby/kare8-invoice_service:${IMAGE_TAG:-develop}
+          image: ghcr.io/rpsbobby/kare8-invoice_service:develop
           env:
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: host.docker.internal:29092
+              value: localhost:29092

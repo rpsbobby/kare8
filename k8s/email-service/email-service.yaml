@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: email-service
-          image: ghcr.io/rpsbobby/kare8-email_service:${IMAGE_TAG:-develop}
+          image: ghcr.io/rpsbobby/kare8-email_service:develop
           env:
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: host.docker.internal:29092
+              value: localhost:29092

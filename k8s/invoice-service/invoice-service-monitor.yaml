@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: invoice-monitor
+  name: invoice-service-monitor
 spec:
   selector:
     matchLabels:

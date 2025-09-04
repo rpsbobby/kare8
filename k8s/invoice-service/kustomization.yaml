@@ -1,0 +1,6 @@
+resources:
+  - invoice-service-monitor.yaml
+  - invoice-service.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: kare8

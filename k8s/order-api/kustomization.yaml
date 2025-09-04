@@ -1,0 +1,6 @@
+resources:
+  - order-api.yaml
+  - order-api-monitor.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: kare8
