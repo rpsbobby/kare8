@@ -1,19 +1,5 @@
 global:
   scrape_interval: 5s
 
-scrape_configs:
-  - job_name: "order-api"
-    static_configs:
-      - targets: ["host.docker.internal:30090"]  # NodePort for order-api metrics
-
-  - job_name: "consumer"
-    static_configs:
-      - targets: ["host.docker.internal:30091"]  # NodePort for consumer metrics
-
-  - job_name: "invoice"
-    static_configs:
-      - targets: ["host.docker.internal:30092"]
-
-  - job_name: "email"
-    static_configs:
-      - targets: ["host.docker.internal:30093"]
+# No scrape_configs needed — data comes via remote_write
+remote_write: []

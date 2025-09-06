@@ -1,8 +1,11 @@
 resources:
+  - namespace.yaml
   - order-api
   - kafka-consumer
   - invoice-service
   - email-service
+  - prometheus-agent.yaml
+  - prometheus-agent-rbac.yaml
 
 namespace: kare8
 
