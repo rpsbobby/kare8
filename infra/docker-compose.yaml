@@ -45,7 +45,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-
+    volumes:
+        - grafana-k8s:/var/lib/grafana
   nginx:
     image: nginx:1.27
     volumes:
@@ -60,3 +61,7 @@ services:
     environment:
       - API_URL=http://nginx/order
       - GENERATOR_INTERVAL=2
+
+
+volumes:
+  grafana-k8s:
