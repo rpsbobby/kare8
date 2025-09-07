@@ -12,4 +12,4 @@ docker compose up --build # rebuild all container
 # for k8s
 
  - spammer : docker run -d --name spammer -e API_URL=http://host.docker.internal:30080/order -e GENERATOR_INTERVAL=2 ghcr.io/rpsbobby/kare8-spammer:develop
- - 
+- ingress proxy: helm install ingress-nginx ingress-nginx/ingress-nginx   --namespace kare8   --create-namespace   --set controller.service.type=NodePort
