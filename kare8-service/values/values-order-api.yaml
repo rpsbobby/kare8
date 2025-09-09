@@ -1,0 +1,12 @@
+image:
+  repository: ghcr.io/rpsbobby/kare8-order_api
+  tag: develop
+service:
+  port: 8000
+  metricsPort: 9000
+ingress:
+  enabled: true
+  path: /order
+monitoring:
+  enabled: true
+  interval: 5s

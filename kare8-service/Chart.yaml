@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kare8-service
+description: A reusable Helm chart for Kare8 microservices
+type: application
+version: 0.1.0       # chart version
+appVersion: "develop" # app (image) version

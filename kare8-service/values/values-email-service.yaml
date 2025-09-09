@@ -1,0 +1,12 @@
+image:
+  repository: ghcr.io/rpsbobby/kare8-email_service
+  tag: develop
+service:
+  port: null
+  metricsPort: 9000
+  type: ClusterIP
+ingress:
+  enabled: false
+monitoring:
+  enabled: true
+  interval: 5s

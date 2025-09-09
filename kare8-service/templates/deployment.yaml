@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kare8-service.fullname" . }}
+  labels:
+    app: {{ include "kare8-service.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "kare8-service.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "kare8-service.name" . }}
+    spec:
+      containers:
+        - name: {{ include "kare8-service.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- if .Values.service.port }}
+            - name: http
+              containerPort: {{ .Values.service.port }}
+            {{- end }}
+            {{- if .Values.service.metricsPort }}
+            - name: metrics
+              containerPort: {{ .Values.service.metricsPort }}
+            {{- end }}

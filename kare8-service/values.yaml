@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: ""         # must be set per-service
+  tag: "develop"         # default to your dev stream
+  pullPolicy: Always     # always pull fresh for :develop tags
+
+service:
+  port: null             # no http by default
+  metricsPort: 9000
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  className: nginx
+  host: kare8.local
+  path: /
+
+monitoring:
+  enabled: false
+  interval: 30s
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
