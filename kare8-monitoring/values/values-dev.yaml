@@ -1,0 +1,1 @@
+remoteWriteUrl: "http://host.docker.internal:9090/api/v1/write"

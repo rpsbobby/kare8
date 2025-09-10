@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: prom/prometheus
+  tag: v2.53.0
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: prometheus-agent
+
+remoteWriteUrl: "http://prometheus:9090/api/v1/write"
+
+scrapeInterval: 5s
+scrapeTargets:
+  - name: order-api
+    endpoint: http://order-api-kare8-service:9000/metrics
+  - name: invoice-service
+    endpoint: http://invoice-service-kare8-service:9000/metrics
+  - name: email-service
+    endpoint: http://email-service-kare8-service:9000/metrics
+  - name: kafka-consumer
+    endpoint: http://kafka-consumer-kare8-service:9000/metrics

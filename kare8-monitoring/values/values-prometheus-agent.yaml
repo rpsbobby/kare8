@@ -1,0 +1,17 @@
+scrapeInterval: 5s
+
+scrapeTargets:
+  - name: order-api
+    host: order-api-kare8-service
+    port: 9000
+  - name: invoice-service
+    host: invoice-service-kare8-service
+    port: 9000
+  - name: email-service
+    host: email-service-kare8-service
+    port: 9000
+  - name: kafka-consumer
+    host: kafka-consumer-kare8-service
+    port: 9000
+
+remoteWriteUrl: "http://host.docker.internal:9090/api/v1/write"

@@ -54,6 +54,7 @@ services:
     ports:
       - "8080:80"
 
+
   spammer:
     image: ghcr.io/rpsbobby/kare8-spammer:develop
     depends_on:

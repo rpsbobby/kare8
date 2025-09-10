@@ -7,9 +7,13 @@ spec:
   selector:
     app: {{ include "kare8-service.name" . }}
   ports:
-    - name: http
-      port: {{ .Values.service.port }}
-      targetPort: http
-    - name: metrics
-      port: {{ .Values.service.metricsPort }}
-      targetPort: metrics
+      {{- if .Values.service.port }}
+      - name: http
+        port: {{ .Values.service.port }}
+        targetPort: http
+      {{- end }}
+      {{- if .Values.service.metricsPort }}
+      - name: metrics
+        port: {{ .Values.service.metricsPort }}
+        targetPort: metrics
+      {{- end }}
