@@ -14,4 +14,4 @@ scrapeTargets:
     host: kafka-consumer-kare8-service
     port: 9000
 
-remoteWriteUrl: "http://host.docker.internal:9090/api/v1/write"
+remoteWriteUrl: "http:/pin/host.docker.internal:9090/api/v1/write"

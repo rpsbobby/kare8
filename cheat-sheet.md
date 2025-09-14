@@ -50,10 +50,53 @@ kubectl get pods,svc,ingress,servicemonitor -n kare8
 kubectl get pods -n ingress-nginx
 ```
 
+7. install monoitoring chart
+```bash
+helm upgrade --install prometheus-agent ./kare8-monitoring \
+  -f ./kare8-monitoring/values/values-prometheus-agent.yaml \
+  -f ./kare8-monitoring/values/values-dev.yaml \
+  -n kare8 \
+  --create-namespace
+```
+
 Test external access (assuming NodePort 32217):
 ```bash
 curl -H "Host: kare8.local" http://localhost:32217/order -X POST
 ```
+
+### Nginx config - How to check the values
+
+Bridge IP:
+```bash
+ip addr show docker0 | grep inet
+```
+# → usually "172.17.0.1"
+
+
+Ingress NodePort:
+```bash 
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+```
+# Look under PORT(S), e.g. 80:32224/TCP
+
+3. nginx.conf template
+
+Edit nginx.conf (mounted into /etc/nginx/conf.d/default.conf):
+```yaml
+upstream kare8_ingress {
+    server <bridge-ip>:<nodeport>;
+}
+
+server {
+    listen 80;
+
+    location /order {
+        proxy_pass http://kare8_ingress/order;
+    }
+}
+```
+
+
 
 ### 🔹 Manual Teardown (working → clean)
 1. Uninstall services
@@ -63,9 +106,10 @@ helm uninstall invoice-service -n kare8
 helm uninstall email-service -n kare8
 helm uninstall kafka-consumer -n kare8
 ```
-2. Uninstall ingress-nginx
+2. Uninstall ingress-nginx and prometheus agent 
 ```bash
 helm uninstall ingress-nginx -n ingress-nginx
+helm uninstall prometheus-agent -n kare8
 ```
 
 3. Delete namespaces (optional for full reset)
@@ -78,6 +122,10 @@ kubectl delete namespace ingress-nginx
 kubectl delete ingressclass nginx --ignore-not-found
 kubectl delete validatingwebhookconfigurations ingress-nginx-admission --ignore-not-found
 kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/instance=ingress-nginx --ignor
+```
+
+After every install check bridge ip and nodeport:
+```bashkubectl get svc -n ingress-nginx
 ```
 # v1 Compose Cheat Sheet
 

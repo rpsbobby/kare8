@@ -1,0 +1,49 @@
+# helmfile.yaml
+repositories:
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+
+---
+releases:
+  - name: ingress-nginx
+    namespace: ingress-nginx
+    chart: ingress-nginx/ingress-nginx
+    createNamespace: true
+    version: 4.10.0
+
+  # order-api
+  - name: order-api
+    namespace: kare8
+    chart: ./kare8-service
+    createNamespace: true
+    values:
+      - ./kare8-service/values/values-order-api.yaml
+
+  # invoice-service
+  - name: invoice-service
+    namespace: kare8
+    chart: ./kare8-service
+    values:
+      - ./kare8-service/values/values-invoice-service.yaml
+
+  # email-service
+  - name: email-service
+    namespace: kare8
+    chart: ./kare8-service
+    values:
+      - ./kare8-service/values/values-email-service.yaml
+
+  # kafka-consumer
+  - name: kafka-consumer
+    namespace: kare8
+    chart: ./kare8-service
+    values:
+      - ./kare8-service/values/values-kafka-consumer.yaml
+
+  # prometheus-agent
+  - name: prometheus-agent
+    namespace: kare8
+    chart: ./kare8-monitoring
+    values:
+      - ./kare8-monitoring/values/values-prometheus-agent.yaml
+      - ./kare8-monitoring/values/values-dev.yaml
